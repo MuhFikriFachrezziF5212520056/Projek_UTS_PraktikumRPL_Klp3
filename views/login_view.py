@@ -12,7 +12,6 @@ Jalankan berkas ini secara mandiri dengan:
 """
 
 import customtkinter as ctk
-from tkinter import messagebox
 
 from views.laundry_view import _input, _label, _tombol, bind_event
 
@@ -26,11 +25,6 @@ PALET = {
     "konsol": "#eff9f6",
     "salah": "#e11d48",
 }
-
-# Keterangan yang muncul ketika tombol Masuki ditekan.
-PESAN_LOGIN = ("Username dan password belum diperiksa.\n\n"
-               "Sesuai Modul 5, pemeriksaan kelayakan login merupakan "
-               "tugas Controller yang belum dibuat pada tahap ini.")
 
 
 class LoginView(ctk.CTkFrame):
@@ -217,8 +211,6 @@ class LoginView(ctk.CTkFrame):
             return
 
         self.pengguna_masuk = self.entry_username.get().strip()
-        messagebox.showinfo("Informasi", PESAN_LOGIN,
-                            parent=self.winfo_toplevel())
         # Menutup jendela ini supaya jendela utama dapat dibuka.
         self.winfo_toplevel().destroy()
 
