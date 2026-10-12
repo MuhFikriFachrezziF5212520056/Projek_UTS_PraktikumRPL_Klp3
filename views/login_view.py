@@ -32,11 +32,6 @@ PESAN_LOGIN = ("Username dan password belum diperiksa.\n\n"
                "Sesuai Modul 5, pemeriksaan kelayakan login merupakan "
                "tugas Controller yang belum dibuat pada tahap ini.")
 
-# Keterangan yang muncul ketika tombol data ditekan.
-PESAN_BELUM = ("Tombol ini belum berfungsi.\n\n"
-               "Sesuai Modul 5, antarmuka pada tahap ini belum "
-               "dihubungkan ke Controller.")
-
 
 class LoginView(ctk.CTkFrame):
     """Kartu login berupa antarmuka statis."""

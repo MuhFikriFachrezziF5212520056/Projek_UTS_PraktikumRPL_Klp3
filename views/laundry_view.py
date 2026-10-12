@@ -33,11 +33,10 @@ DATA_PELANGGAN = [
 ]
 
 DATA_PAKET = [
-    {"nama": "Cuci Kering", "jenis": "Cuci Kering", "harga": 7000},
-    {"nama": "Cuci Basah", "jenis": "Cuci Basah", "harga": 8000},
-    {"nama": "Pembersihan Karpet", "jenis": "Pembersihan Karpet",
-     "harga": 15000},
-    {"nama": "Setrika", "jenis": "Setrika", "harga": 5000},
+    {"nama": "Cuci Kering", "harga": 7000},
+    {"nama": "Cuci Basah", "harga": 8000},
+    {"nama": "Pembersihan Karpet", "harga": 15000},
+    {"nama": "Setrika", "harga": 5000},
 ]
 
 DATA_TRANSAKSI = [
@@ -101,11 +100,6 @@ def bind_event(widget, event: str, fungsi) -> None:
     internal = getattr(widget, "_entry", None)
     if internal is not None:
         internal.bind(event, fungsi)
-
-
-def _tanggal_hari_ini() -> str:
-    """Mengembalikan tanggal hari ini dalam format tahun-bulan-hari."""
-    return date.today().isoformat()
 
 
 def _rp(nilai) -> str:
@@ -215,22 +209,19 @@ class LaundryView(ctk.CTkFrame):
         bind_event(self.combo_pelanggan, "<KeyRelease>",
                    self._pelanggan_diubah)
 
-        self.btn_hapus_pelanggan = _tombol(
-            form, "Hapus", self._belum_terhubung, 1, 1,
-            gaya={**kecil, **merah}, padx=(0, 12), pady=2)
+        _tombol(form, "Hapus", self._belum_terhubung, 1, 1,
+                gaya={**kecil, **merah}, padx=(0, 12), pady=2)
 
         self.combo_paket = _input(
             form, ctk.CTkComboBox, 1, 2,
             gaya={"state": "readonly", "values": ["-"]},
             sticky="ew", padx=(12, 4), pady=2)
 
-        self.btn_tambah_paket = _tombol(
-            form, "+ Paket", self._buka_dialog_paket, 1, 3,
-            gaya=kecil, padx=4, pady=2)
+        _tombol(form, "+ Paket", self._belum_terhubung, 1, 3,
+                gaya=kecil, padx=4, pady=2)
 
-        self.btn_hapus_paket = _tombol(
-            form, "Hapus", self._belum_terhubung, 1, 4,
-            gaya={**kecil, **merah}, padx=(4, 10), pady=2)
+        _tombol(form, "Hapus", self._belum_terhubung, 1, 4,
+                gaya={**kecil, **merah}, padx=(4, 10), pady=2)
 
         # --- Baris 2: Nomor Telepon dan Alamat pelanggan ---
         label_kiri("No. Telepon", 2)
@@ -339,7 +330,7 @@ class LaundryView(ctk.CTkFrame):
         self.combo_status.configure(values=STATUS_CUCIAN)
         self.combo_status.set(STATUS_CUCIAN[0])
 
-        self._isi_tanggal_default()
+        _isi(self.entry_terima, date.today().isoformat())
         self._isi_kontak()
 
     def muat_daftar(self) -> None:
@@ -378,14 +369,8 @@ class LaundryView(ctk.CTkFrame):
     # ==================================================================
     # PENGISIAN FORM
     # ==================================================================
-    def _isi_tanggal_default(self) -> None:
-        """Mengisi tanggal terima dengan hari ini bila kolom masih kosong."""
-        if not self.entry_terima.get().strip():
-            _isi(self.entry_terima, _tanggal_hari_ini())
-
     def _pelanggan_diubah(self, _event=None) -> None:
         """Menampilkan kontak pelanggan contoh sesuai nama yang diketik."""
-        self._isi_tanggal_default()
         self._isi_kontak()
         self._hitung_total()
 
@@ -412,61 +397,6 @@ class LaundryView(ctk.CTkFrame):
         except ValueError:
             berat = 0
         self.label_total.configure(text=f"Total Biaya: {_rp(berat * harga)}")
-
-    # ==================================================================
-    # DIALOG TAMBAH PAKET
-    # ==================================================================
-    def _buka_dialog_paket(self) -> None:
-        """Menampilkan jendela kecil berisi isian paket layanan."""
-        dialog = ctk.CTkToplevel(self)
-        dialog.title("Tambah Paket Layanan")
-        dialog.geometry("360x230")
-        dialog.resizable(False, False)
-        dialog.transient(self.winfo_toplevel())
-
-        frame = ctk.CTkFrame(dialog, fg_color="transparent")
-        frame.pack(fill="both", expand=True, padx=18, pady=16)
-        frame.grid_columnconfigure(1, weight=1)
-
-        def label(teks, baris):
-            _label(frame, teks, baris, 0, gaya={"anchor": "w"},
-                   sticky="w", pady=(0, 2))
-
-        label("Nama Paket", 0)
-        entry_nama = _input(frame, ctk.CTkEntry, 1, 0, columnspan=2,
-                            gaya={"placeholder_text": "Contoh: Cuci Kilat"},
-                            sticky="ew", pady=(0, 10))
-
-        label("Jenis Layanan", 2)
-        combo_jenis = _input(frame, ctk.CTkComboBox, 3, 0, columnspan=2,
-                             gaya={"state": "normal",
-                                   "values": ["Cuci Kering", "Cuci Basah",
-                                              "Setrika",
-                                              "Pembersihan Karpet", "Lipat"]},
-                             sticky="ew", pady=(0, 10))
-        combo_jenis.set("Cuci Kering")
-
-        label("Harga per Kg (Rp)", 4)
-        _input(frame, ctk.CTkEntry, 5, 0, columnspan=2,
-               gaya={"placeholder_text": "Contoh: 7500"},
-               sticky="ew", pady=(0, 14))
-
-        def tutup(_event=None):
-            messagebox.showinfo("Informasi", PESAN_BELUM, parent=dialog)
-            dialog.destroy()
-
-        tombol = ctk.CTkFrame(frame, fg_color="transparent")
-        tombol.grid(row=6, column=0, columnspan=2, sticky="ew")
-        tombol.grid_columnconfigure((0, 1), weight=1)
-        _tombol(tombol, "Batal", dialog.destroy, 0, 0,
-                gaya={"height": 32, "fg_color": "transparent",
-                      "border_width": 1, "text_color": "gray"},
-                sticky="ew", padx=(0, 4))
-        _tombol(tombol, "Simpan Paket", tutup, 0, 1,
-                gaya={"height": 32}, sticky="ew", padx=(4, 0))
-
-        entry_nama.focus_set()
-        bind_event(entry_nama, "<Return>", tutup)
 
     # ==================================================================
     # TOMBOL YANG BELUM TERHUBUNG

@@ -311,9 +311,8 @@ class DashboardView(ctk.CTkFrame):
 
     def _tandai_waktu(self) -> None:
         """Menampilkan jam saat tampilan dibuat ulang."""
-        if self.label_waktu is not None:
-            self.label_waktu.configure(
-                text=f"Terakhir diperbarui {datetime.now():%H:%M:%S}")
+        self.label_waktu.configure(
+            text=f"Terakhir diperbarui {datetime.now():%H:%M:%S}")
 
 
 if __name__ == "__main__":
