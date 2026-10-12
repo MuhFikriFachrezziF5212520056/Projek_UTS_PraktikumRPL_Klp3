@@ -1,19 +1,5 @@
-"""
-Antarmuka halaman Dashboard.
-
-Sesuai Modul 5, berkas ini berisi antarmuka statis. Kartu ringkasan,
-panel, dan tabel sudah tersusun rapi, tetapi belum dihubungkan ke
-Controller. Angka dan isi tabel diambil dari data contoh pada
-views/laundry_view.py, bukan dari basis data.
-
-Jalankan berkas ini secara mandiri dengan:
-    python views/dashboard_view.py
-"""
-
 from datetime import datetime
-
 import customtkinter as ctk
-
 from views.laundry_view import (
     DATA_PAKET, DATA_PELANGGAN, DATA_TRANSAKSI, WARNA_KARTU, _gaya_tabel,
     _label, _rp, _tabel, _tombol)

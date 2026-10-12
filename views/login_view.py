@@ -1,20 +1,5 @@
-"""
-Antarmuka halaman Login.
-
-Sesuai Modul 5, berkas ini berisi antarmuka statis. Kartu login sudah
-tersusun rapi, tetapi belum dihubungkan ke Controller. Karena itu
-username dan password tidak diperiksa terhadap daftar mana pun.
-Tombol Masuk hanya berpindah halaman agar halaman berikutnya dapat
-dilihat.
-
-Jalankan berkas ini secara mandiri dengan:
-    python views/login_view.py
-"""
-
 import customtkinter as ctk
-
 from views.laundry_view import _input, _label, _tombol, bind_event
-
 # Warna halaman login.
 PALET = {
     "kartu": "#ffffff",
@@ -25,7 +10,6 @@ PALET = {
     "konsol": "#eff9f6",
     "salah": "#e11d48",
 }
-
 
 class LoginView(ctk.CTkFrame):
     """Kartu login berupa antarmuka statis."""

@@ -1,21 +1,7 @@
-"""
-SIM Laundry - halaman tampilan.
-
-Sesuai Modul 5, program ini hanya merakit antarmuka. Tidak ada
-Controller, tidak ada Model, dan tidak ada koneksi basis data. Isi
-setiap halaman diambil dari data contoh di dalam berkas view.
-
-Model pada folder models tetap tersedia dan tidak diubah oleh berkas
-ini. Model tersebut sudah diuji secara mandiri melalui test_model.py
-sesuai langkah pada Modul 4.
-"""
-
 import sys
 from pathlib import Path
-
 sys.path.append(str(Path(__file__).resolve().parent))
 import customtkinter as ctk
-
 from views.login_view import LoginView
 from views.dashboard_view import DashboardView
 from views.laundry_view import LaundryView, _label, _tombol

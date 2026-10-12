@@ -1,21 +1,4 @@
-"""
-Antarmuka halaman Transaksi Laundry.
-
-Sesuai Modul 5, berkas ini berisi antarmuka statis. Form, tombol, dan
-tabel sudah tersusun rapi, tetapi belum dihubungkan ke Controller.
-Karena itu tombol data seperti Simpan, Perbarui, dan Hapus belum
-memiliki tugas apa pun saat ditekan.
-
-Isi tabel dan daftar pilihan diambil dari data contoh di bawah, bukan
-dari basis data. Model pada folder models tetap tersedia dan tidak
-diubah oleh berkas ini.
-
-Jalankan berkas ini secara mandiri dengan:
-    python views/laundry_view.py
-"""
-
 from datetime import date
-
 import customtkinter as ctk
 from tkinter import ttk
 
@@ -67,7 +50,6 @@ WARNA_KARTU = "#ffffff"
 _TERANG = {"bg": "#ffffff", "fg": "#1a1a1a", "head_bg": "#e6e6e6",
            "head_fg": "#1a1a1a", "sel_bg": "#1f6aa5"}
 
-
 def _gaya_tabel() -> None:
     """Menyesuaikan warna tabel dengan tema terang."""
     p = _TERANG
@@ -89,25 +71,21 @@ def _gaya_tabel() -> None:
                    troughcolor=p["bg"], bordercolor=p["bg"],
                    arrowcolor=p["fg"])
 
-
 def bind_event(widget, event: str, fungsi) -> None:
     """Mengikat kejadian pada bagian dalam widget customtkinter."""
     internal = getattr(widget, "_entry", None)
     if internal is not None:
         internal.bind(event, fungsi)
 
-
 def _rp(nilai) -> str:
     """Mengubah angka menjadi teks bergaya Rupiah."""
     return f"Rp {float(nilai or 0):,.0f}".replace(",", ".")
-
 
 def _label(bapak, teks, baris=0, kolom=0, *, gaya=None, **tempat):
     """Menempatkan satu label ke dalam wadah."""
     label = ctk.CTkLabel(bapak, text=teks, **(gaya or {}))
     label.grid(row=baris, column=kolom, **tempat)
     return label
-
 
 def _input(bapak, kelas, baris=0, kolom=0, *, gaya=None, **tempat):
     """Menempatkan widget isian, yaitu kolom teks atau kotak pilihan."""
@@ -126,13 +104,6 @@ def _tombol(bapak, teks, perintah=None, baris=0, kolom=0, *, gaya=None,
 
 
 def _tabel(bapak, kolom, *, baris=1, tinggi=3):
-    """
-    Membuat tabel beserta judul dan lebar kolomnya.
-
-    Setiap isi kolom berbentuk (nama, judul, lebar, jangkar). Kolom yang
-    rata kiri ikut melar mengikuti lebar jendela, selain itu lebarnya
-    dikunci supaya tabel tidak bergeser.
-    """
     pohon = ttk.Treeview(bapak, columns=tuple(k for k, _j, _l, _a in kolom),
                           show="headings", height=tinggi,
                           style="Laundry.Treeview")
