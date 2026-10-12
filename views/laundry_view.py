@@ -3,8 +3,8 @@ Antarmuka halaman Transaksi Laundry.
 
 Sesuai Modul 5, berkas ini berisi antarmuka statis. Form, tombol, dan
 tabel sudah tersusun rapi, tetapi belum dihubungkan ke Controller.
-Karena itu tombol Simpan, Perbarui, dan Hapus hanya menampilkan
-keterangan bahwa tombol tersebut belum berfungsi.
+Karena itu tombol data seperti Simpan, Perbarui, dan Hapus belum
+memiliki tugas apa pun saat ditekan.
 
 Isi tabel dan daftar pilihan diambil dari data contoh di bawah, bukan
 dari basis data. Model pada folder models tetap tersedia dan tidak
@@ -17,7 +17,7 @@ Jalankan berkas ini secara mandiri dengan:
 from datetime import date
 
 import customtkinter as ctk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 
 # ==================================================================
 # DATA CONTOH
@@ -54,11 +54,6 @@ DATA_TRANSAKSI = [
 ]
 
 STATUS_CUCIAN = ["Antrean", "Proses", "Selesai", "Diambil"]
-
-# Keterangan yang muncul ketika tombol ditekan.
-PESAN_BELUM = ("Tombol ini belum berfungsi.\n\n"
-               "Sesuai Modul 5, antarmuka pada tahap ini belum "
-               "dihubungkan ke Controller.")
 
 
 # ==================================================================
@@ -209,7 +204,7 @@ class LaundryView(ctk.CTkFrame):
         bind_event(self.combo_pelanggan, "<KeyRelease>",
                    self._pelanggan_diubah)
 
-        _tombol(form, "Hapus", self._belum_terhubung, 1, 1,
+        _tombol(form, "Hapus", None, 1, 1,
                 gaya={**kecil, **merah}, padx=(0, 12), pady=2)
 
         self.combo_paket = _input(
@@ -217,10 +212,10 @@ class LaundryView(ctk.CTkFrame):
             gaya={"state": "readonly", "values": ["-"]},
             sticky="ew", padx=(12, 4), pady=2)
 
-        _tombol(form, "+ Paket", self._belum_terhubung, 1, 3,
+        _tombol(form, "+ Paket", None, 1, 3,
                 gaya=kecil, padx=4, pady=2)
 
-        _tombol(form, "Hapus", self._belum_terhubung, 1, 4,
+        _tombol(form, "Hapus", None, 1, 4,
                 gaya={**kecil, **merah}, padx=(4, 10), pady=2)
 
         # --- Baris 2: Nomor Telepon dan Alamat pelanggan ---
@@ -270,11 +265,11 @@ class LaundryView(ctk.CTkFrame):
         tombol.grid_columnconfigure((0, 1, 2), weight=1)
 
         aksi = {"height": 34}
-        _tombol(tombol, "Simpan Data", self._belum_terhubung, 0, 0,
+        _tombol(tombol, "Simpan Data", None, 0, 0,
                 gaya=aksi, sticky="ew", padx=(0, 4))
-        _tombol(tombol, "Perbarui", self._belum_terhubung, 0, 1,
+        _tombol(tombol, "Perbarui", None, 0, 1,
                 gaya={**aksi, "fg_color": "#1f6aa5"}, sticky="ew", padx=4)
-        _tombol(tombol, "Hapus", self._belum_terhubung, 0, 2,
+        _tombol(tombol, "Hapus", None, 0, 2,
                 gaya={**aksi, **merah}, sticky="ew", padx=(4, 0))
 
     # ==================================================================
@@ -397,13 +392,6 @@ class LaundryView(ctk.CTkFrame):
         except ValueError:
             berat = 0
         self.label_total.configure(text=f"Total Biaya: {_rp(berat * harga)}")
-
-    # ==================================================================
-    # TOMBOL YANG BELUM TERHUBUNG
-    # ==================================================================
-    def _belum_terhubung(self) -> None:
-        """Menampilkan keterangan bahwa tombol belum berfungsi."""
-        messagebox.showinfo("Informasi", PESAN_BELUM, parent=self)
 
 
 if __name__ == "__main__":
