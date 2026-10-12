@@ -56,9 +56,6 @@ DATA_TRANSAKSI = [
 
 STATUS_CUCIAN = ["Antrean", "Proses", "Selesai", "Diambil"]
 
-DAFTAR_JENIS = ["Cuci Kering", "Cuci Basah", "Setrika",
-                "Pembersihan Karpet", "Lipat"]
-
 # Keterangan yang muncul ketika tombol ditekan.
 PESAN_BELUM = ("Tombol ini belum berfungsi.\n\n"
                "Sesuai Modul 5, antarmuka pada tahap ini belum "
@@ -68,16 +65,18 @@ PESAN_BELUM = ("Tombol ini belum berfungsi.\n\n"
 # ==================================================================
 # HELPER TAMPILAN
 # ==================================================================
-# Palet tabel agar senada dengan tema customtkinter.
-_GELAP = {"bg": "#2b2b2b", "fg": "#e8e8e8", "head_bg": "#3a3a3a",
-          "head_fg": "#ffffff", "sel_bg": "#1f6aa5"}
+# Warna dasar tampilan. Dipakai bersama oleh ketiga view agar
+# kartunya tidak perlu diwarnai ulang dari main.py.
+WARNA_KARTU = "#ffffff"
+
+# Palet tabel agar senada dengan tema terang.
 _TERANG = {"bg": "#ffffff", "fg": "#1a1a1a", "head_bg": "#e6e6e6",
            "head_fg": "#1a1a1a", "sel_bg": "#1f6aa5"}
 
 
-def _gaya_tabel(mode) -> ttk.Style:
-    """Menyesuaikan warna tabel dengan tema yang sedang dipakai."""
-    p = _GELAP if str(mode).strip().lower().startswith("dark") else _TERANG
+def _gaya_tabel() -> None:
+    """Menyesuaikan warna tabel dengan tema terang."""
+    p = _TERANG
     gaya = ttk.Style()
     try:
         gaya.theme_use("clam")
@@ -95,7 +94,6 @@ def _gaya_tabel(mode) -> ttk.Style:
     gaya.configure("Laundry.Vertical.TScrollbar", background=p["head_bg"],
                    troughcolor=p["bg"], bordercolor=p["bg"],
                    arrowcolor=p["fg"])
-    return gaya
 
 
 def bind_event(widget, event: str, fungsi) -> None:
@@ -164,15 +162,6 @@ def _isi(kolom, teks) -> None:
         kolom.insert(0, str(teks))
 
 
-def _cari(teks, sumber):
-    """Mencari nama pada daftar data contoh tanpa huruf besar kecil."""
-    target = str(teks or "").strip().lower()
-    for item in sumber:
-        if str(item["nama"]).strip().lower() == target:
-            return item
-    return None
-
-
 # ==================================================================
 # ANTARMUKA TRANSAKSI
 # ==================================================================
@@ -182,7 +171,7 @@ class LaundryView(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color="transparent")
 
-        _gaya_tabel(ctk.get_appearance_mode())
+        _gaya_tabel()
         self._build_form()
         self._build_tabel()
         self.muat_data_contoh()
@@ -204,7 +193,8 @@ class LaundryView(ctk.CTkFrame):
                gaya={"font": ("Segoe UI", 14, "bold"), "anchor": "w"},
                sticky="w", pady=(0, 6))
 
-        self.frame_form = ctk.CTkFrame(self)
+        self.frame_form = ctk.CTkFrame(self, fg_color=WARNA_KARTU,
+                                      corner_radius=14)
         form = self.frame_form
         form.grid(row=1, column=0, sticky="nsew", padx=(0, 12))
         form.grid_columnconfigure(0, weight=3)
@@ -304,7 +294,8 @@ class LaundryView(ctk.CTkFrame):
                gaya={"font": ("Segoe UI", 14, "bold"), "anchor": "w"},
                sticky="w", pady=(0, 6))
 
-        self.frame_tabel = ctk.CTkFrame(self)
+        self.frame_tabel = ctk.CTkFrame(self, fg_color=WARNA_KARTU,
+                                       corner_radius=14)
         bingkai = self.frame_tabel
         bingkai.grid(row=1, column=1, sticky="nsew")
         bingkai.grid_rowconfigure(1, weight=1)
@@ -400,9 +391,14 @@ class LaundryView(ctk.CTkFrame):
 
     def _isi_kontak(self) -> None:
         """Mengisi kolom telepon dan alamat dari daftar data contoh."""
-        data = _cari(self.combo_pelanggan.get(), DATA_PELANGGAN)
-        _isi(self.entry_telp, data and data["no_telp"])
-        _isi(self.entry_alamat, data and data["alamat"])
+        target = self.combo_pelanggan.get().strip().lower()
+        for orang in DATA_PELANGGAN:
+            if orang["nama"].strip().lower() == target:
+                _isi(self.entry_telp, orang["no_telp"])
+                _isi(self.entry_alamat, orang["alamat"])
+                return
+        _isi(self.entry_telp, "")
+        _isi(self.entry_alamat, "")
 
     def _hitung_total(self) -> None:
         """Menampilkan perkalian berat dengan harga paket contoh."""
@@ -444,9 +440,11 @@ class LaundryView(ctk.CTkFrame):
         label("Jenis Layanan", 2)
         combo_jenis = _input(frame, ctk.CTkComboBox, 3, 0, columnspan=2,
                              gaya={"state": "normal",
-                                   "values": DAFTAR_JENIS},
+                                   "values": ["Cuci Kering", "Cuci Basah",
+                                              "Setrika",
+                                              "Pembersihan Karpet", "Lipat"]},
                              sticky="ew", pady=(0, 10))
-        combo_jenis.set(DAFTAR_JENIS[0])
+        combo_jenis.set("Cuci Kering")
 
         label("Harga per Kg (Rp)", 4)
         _input(frame, ctk.CTkEntry, 5, 0, columnspan=2,

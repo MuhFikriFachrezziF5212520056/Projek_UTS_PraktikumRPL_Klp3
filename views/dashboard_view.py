@@ -15,8 +15,12 @@ from datetime import datetime
 import customtkinter as ctk
 
 from views.laundry_view import (
-    DATA_PAKET, DATA_PELANGGAN, DATA_TRANSAKSI, _gaya_tabel, _label,
-    _rp, _tabel, _tombol)
+    DATA_PAKET, DATA_PELANGGAN, DATA_TRANSAKSI, WARNA_KARTU, _gaya_tabel,
+    _label, _rp, _tabel, _tombol)
+
+# Gaya huruf yang sering dipakai, ditulis sekali agar tidak berulang.
+_JUDUL = {"font": ("Segoe UI", 14, "bold"), "anchor": "w"}
+_ABU = {"text_color": "gray", "anchor": "w"}
 
 # Pasangan label status cucian dengan kunci ringkasan.
 STATUS_BARIS = (
@@ -44,7 +48,7 @@ class DashboardView(ctk.CTkFrame):
         self.grid_rowconfigure(4, weight=3)
         self.grid_rowconfigure(6, weight=2)
 
-        _gaya_tabel(ctk.get_appearance_mode())
+        _gaya_tabel()
         self._build_sapaan()
         self._build_kartu()
         self._build_panel_kontak()
@@ -56,26 +60,23 @@ class DashboardView(ctk.CTkFrame):
     # KONSTRUKSI KOMPONEN
     # ==================================================================
     def _build_sapaan(self) -> None:
-        self.label_sapaan = _label(
-            self, f"Halo, {self.nama_pengguna}!", 0, 0, columnspan=3,
-            gaya={"font": ("Segoe UI", 20, "bold"), "anchor": "w"},
-            sticky="w", pady=(0, 2))
+        _label(self, f"Halo, {self.nama_pengguna}!", 0, 0, columnspan=3,
+               gaya={"font": ("Segoe UI", 20, "bold"), "anchor": "w"},
+               sticky="w", pady=(0, 2))
 
         self.btn_refresh = _tombol(
             self, "\u21bb  Muat Ulang", self.muat_data, 0, 3,
             gaya={"width": 130, "height": 34, "corner_radius": 12},
             sticky="e")
 
-        abu = {"text_color": "gray", "anchor": "w"}
         self.label_subjudul = _label(
             self, "Ringkasan operasional jasa laundry.", 1, 0,
-            columnspan=3, gaya={**abu, "font": ("Segoe UI", 12)},
+            columnspan=3, gaya={**_ABU, "font": ("Segoe UI", 12)},
             sticky="w", pady=(0, 14))
 
         self.label_waktu = _label(
             self, "", 1, 3,
-            gaya={"text_color": "gray", "anchor": "e",
-                  "font": ("Segoe UI", 10)},
+            gaya={**_ABU, "anchor": "e", "font": ("Segoe UI", 10)},
             sticky="e", pady=(0, 14))
 
     def _build_kartu(self) -> None:
@@ -85,48 +86,43 @@ class DashboardView(ctk.CTkFrame):
         for kolom in range(4):
             kartu.grid_columnconfigure(kolom, weight=1)
 
-        self.frame_kartu_isi = []
-        self.label_pelanggan = self._satu_kartu(
-            0, "Pelanggan", "Jumlah pelanggan terdaftar")
-        self.label_paket = self._satu_kartu(
-            1, "Paket Layanan", "Katalog layanan tersedia")
-        self.label_transaksi = self._satu_kartu(
-            2, "Transaksi", "Total transaksi laundry")
-        self.label_pendapatan = self._satu_kartu(
-            3, "Total Pendapatan", "Akumulasi seluruh transaksi")
+        for kolom, judul, keterangan in (
+                (0, "Pelanggan", "Jumlah pelanggan terdaftar"),
+                (1, "Paket Layanan", "Katalog layanan tersedia"),
+                (2, "Transaksi", "Total transaksi laundry"),
+                (3, "Total Pendapatan", "Akumulasi seluruh transaksi")):
+            label = self._satu_kartu(kolom, judul, keterangan)
+            setattr(self, f"label_kartu_{kolom}", label)
 
     def _satu_kartu(self, kolom, judul, keterangan) -> ctk.CTkLabel:
         """Membuat satu kartu ringkasan dan mengembalikan label nilainya."""
-        bingkai = ctk.CTkFrame(self.frame_kartu, corner_radius=14)
+        bingkai = ctk.CTkFrame(self.frame_kartu, corner_radius=14,
+                               fg_color=WARNA_KARTU)
         bingkai.grid(row=0, column=kolom, sticky="nsew",
                      padx=(0 if kolom == 0 else 5, 5))
-        self.frame_kartu_isi.append(bingkai)
-
-        abu = {"text_color": "gray", "anchor": "w"}
         _label(bingkai, judul, 0, 0,
-               gaya={**abu, "font": ("Segoe UI", 12)},
+               gaya={**_ABU, "font": ("Segoe UI", 12)},
                sticky="ew", padx=14, pady=(12, 0))
         nilai = _label(bingkai, "0", 1, 0,
                        gaya={"font": ("Segoe UI", 22, "bold"),
                              "anchor": "w"},
                        sticky="ew", padx=14)
         _label(bingkai, keterangan, 2, 0,
-               gaya={**abu, "font": ("Segoe UI", 10)},
+               gaya={**_ABU, "font": ("Segoe UI", 10)},
                sticky="ew", padx=14, pady=(0, 12))
         return nilai
 
     def _build_panel_kontak(self) -> None:
         _label(self, "Kontak Pelanggan", 3, 0, columnspan=2,
-               gaya={"font": ("Segoe UI", 14, "bold"), "anchor": "w"},
-               sticky="w", pady=(0, 6))
+               gaya=_JUDUL, sticky="w", pady=(0, 6))
 
-        abu = {"text_color": "gray", "anchor": "e"}
         self.label_kontak_info = _label(
             self, "", 3, 2, columnspan=2,
-            gaya={**abu, "font": ("Segoe UI", 11)},
+            gaya={**_ABU, "anchor": "e", "font": ("Segoe UI", 11)},
             sticky="e", padx=(0, 8), pady=(0, 6))
 
-        self.frame_kontak = ctk.CTkFrame(self)
+        self.frame_kontak = ctk.CTkFrame(self, fg_color=WARNA_KARTU,
+                                         corner_radius=14)
         bingkai = self.frame_kontak
         bingkai.grid(row=4, column=0, columnspan=4, sticky="nsew")
         bingkai.grid_rowconfigure(1, weight=1)
@@ -141,11 +137,11 @@ class DashboardView(ctk.CTkFrame):
         ))
 
     def _build_panel_status(self) -> None:
-        _label(self, "Status Cucian", 5, 0, columnspan=2,
-               gaya={"font": ("Segoe UI", 14, "bold"), "anchor": "w"},
+        _label(self, "Status Cucian", 5, 0, columnspan=2, gaya=_JUDUL,
                sticky="w", padx=(0, 12), pady=(18, 6))
 
-        self.frame_status = ctk.CTkFrame(self)
+        self.frame_status = ctk.CTkFrame(self, fg_color=WARNA_KARTU,
+                                          corner_radius=14)
         bingkai = self.frame_status
         bingkai.grid(row=6, column=0, columnspan=2, sticky="nsew")
         # Kolom 1 (batang) yang melar, kolom label dan jumlah tetap.
@@ -177,15 +173,17 @@ class DashboardView(ctk.CTkFrame):
             sticky="sw", padx=14, pady=(6, 14))
 
     def _build_panel_terbaru(self) -> None:
-        _label(self, "Transaksi Terbaru", 5, 2,
-               gaya={"font": ("Segoe UI", 14, "bold"), "anchor": "w"},
+        _label(self, "Transaksi Terbaru", 5, 2, gaya=_JUDUL,
                sticky="w", pady=(18, 6))
 
-        abu = {"font": ("Segoe UI", 11), "text_color": "gray", "anchor": "e"}
-        self.label_berat = _label(self, "", 5, 3, gaya=abu,
-                                  sticky="e", padx=(0, 8), pady=(18, 6))
+        self.label_berat = _label(
+            self, "", 5, 3,
+            gaya={"font": ("Segoe UI", 11), "text_color": "gray",
+                  "anchor": "e"},
+            sticky="e", padx=(0, 8), pady=(18, 6))
 
-        self.frame_terbaru = ctk.CTkFrame(self)
+        self.frame_terbaru = ctk.CTkFrame(self, fg_color=WARNA_KARTU,
+                                           corner_radius=14)
         bingkai = self.frame_terbaru
         bingkai.grid(row=6, column=2, columnspan=2, sticky="nsew")
         bingkai.grid_rowconfigure(1, weight=1)
@@ -242,10 +240,10 @@ class DashboardView(ctk.CTkFrame):
 
     def _isi_kartu(self, data: dict) -> None:
         """Menampilkan angka ke dalam empat kartu ringkasan."""
-        self.label_pelanggan.configure(text=str(data["total_pelanggan"]))
-        self.label_paket.configure(text=str(data["total_paket"]))
-        self.label_transaksi.configure(text=str(data["total_transaksi"]))
-        self.label_pendapatan.configure(text=_rp(data["total_pendapatan"]))
+        self.label_kartu_0.configure(text=str(data["total_pelanggan"]))
+        self.label_kartu_1.configure(text=str(data["total_paket"]))
+        self.label_kartu_2.configure(text=str(data["total_transaksi"]))
+        self.label_kartu_3.configure(text=_rp(data["total_pendapatan"]))
 
     def _isi_subjudul(self, data: dict) -> None:
         """Mengubah kalimat subjudul sesuai jumlah cucian tercatat."""

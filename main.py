@@ -28,7 +28,6 @@ JUDUL = "SIM Laundry - Sistem Informasi Manajemen Operasional Jasa Laundry"
 # ---------------------------------------------------------------------------
 LATAR = "#eff9f6"        # latar halaman, mint sangat muda
 SIDE = "#ffffff"         # sidebar
-KARTU = "#ffffff"        # kartu dan panel
 MINT = "#0d9488"         # warna utama
 MINT_GELAP = "#0f766e"   # warna saat tombol ditekan
 MINT_MUDA = "#ccfbf1"    # latar item menu yang sedang aktif
@@ -162,15 +161,8 @@ def buka_jendela_utama(pengguna: str) -> None:
     for tampilan in (view_dashboard, view_transaksi):
         tampilan.configure(fg_color=LATAR)
         tampilan.grid(row=0, column=0, sticky="nsew")
-    for bingkai in (view_dashboard.frame_kartu, view_dashboard.frame_kontak,
-                    view_dashboard.frame_status,
-                    view_dashboard.frame_terbaru, view_transaksi.frame_form,
-                    view_transaksi.frame_tabel):
-        bingkai.configure(fg_color=KARTU, corner_radius=14)
 
-    # Kartu ringkasan dan tombol muat ulang mengikuti warna tema mint.
-    for kartu_kecil in view_dashboard.frame_kartu_isi:
-        kartu_kecil.configure(fg_color=KARTU)
+    # Tombol muat ulang mengikuti warna tema mint.
     view_dashboard.btn_refresh.configure(fg_color=MINT, hover_color=MINT_GELAP)
     view_transaksi.grid_rowconfigure(1, weight=1)
     view_transaksi.grid_columnconfigure(1, weight=1)
