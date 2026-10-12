@@ -1,10 +1,24 @@
-import customtkinter as ctk
-from views.laundry_view import bind_event, _label, _input, _tombol
+"""
+Antarmuka halaman Login.
 
+Sesuai Modul 5, berkas ini berisi antarmuka statis. Kartu login sudah
+tersusun rapi, tetapi belum dihubungkan ke Controller. Karena itu
+tombol Masuk hanya memeriksa kolom kosong, tanpa memeriksa username
+maupun password.
+
+Jalankan berkas ini secara mandiri dengan:
+    python views/login_view.py
+"""
+
+import customtkinter as ctk
+from tkinter import messagebox
+
+from views.laundry_view import _input, _label, _tombol, bind_event
+
+# Warna halaman login.
 PALET = {
     "kartu": "#ffffff",
     "aksen": "#0d9488",
-    "aksen_gelap": "#0f766e",
     "aksen_muda": "#ccfbf1",
     "teks": "#0f3d38",
     "teks_lunak": "#5f8a84",
@@ -12,10 +26,17 @@ PALET = {
     "salah": "#e11d48",
 }
 
+# Keterangan yang muncul ketika tombol Masuk ditekan.
+PESAN_BELUM = ("Tombol ini belum berfungsi.\n\n"
+               "Sesuai Modul 5, antarmuka pada tahap ini belum "
+               "dihubungkan ke Controller.")
+
+
 class LoginView(ctk.CTkFrame):
-    def __init__(self, master, controller):
+    """Kartu login berupa antarmuka statis."""
+
+    def __init__(self, master):
         super().__init__(master, fg_color="transparent")
-        self.controller = controller
         self.pengguna_masuk = None
         self.warna = PALET
         self.sandi_terlihat = False
@@ -45,7 +66,7 @@ class LoginView(ctk.CTkFrame):
         kartu.grid(row=0, column=0, padx=24, pady=(20, 6))
         kartu.grid_columnconfigure(0, weight=1)
 
-        # --- Kepala kartu: blok biru berisi ikon dan nama aplikasi ---
+        # --- Kepala kartu: blok hijau berisi ikon dan nama aplikasi ---
         kepala = ctk.CTkFrame(kartu, fg_color=w["aksen"], corner_radius=14)
         kepala.grid(row=0, column=0, sticky="ew", padx=12, pady=(12, 0))
         # Kolom 1 (judul) yang melar, lencana tetap rata kiri.
@@ -92,8 +113,8 @@ class LoginView(ctk.CTkFrame):
         _label(kartu, "Password", 5, 0, gaya=judul,
                sticky="ew", padx=28, pady=(0, 4))
 
-        # Kolom sandi dan tombol "Lihat" berdampingan; kolom sandi tetap melar
-        # sehingga panjangnya sama dengan kolom username di atasnya.
+        # Kolom sandi dan tombol "Lihat" berdampingan; kolom sandi tetap
+        # melebar sehingga panjangnya sama dengan kolom username.
         bungkus = ctk.CTkFrame(kartu, fg_color="transparent")
         bungkus.grid(row=6, column=0, sticky="ew", padx=28, pady=(0, 6))
         bungkus.grid_columnconfigure(0, weight=1)
@@ -111,7 +132,7 @@ class LoginView(ctk.CTkFrame):
                   "font": ("Segoe UI", 12, "bold")},
             padx=(8, 0))
 
-        # --- Baris pesan kesalahan; selalu ada agar tampilan tidak melompat ---
+        # --- Baris pesan kesalahan; selalu ada agar tampilan tidak melompat
         self.label_salah = _label(
             kartu, "", 7, 0,
             gaya={"font": ("Segoe UI", 11, "bold"), "text_color": w["salah"],
@@ -122,25 +143,25 @@ class LoginView(ctk.CTkFrame):
         self.btn_masuk = _tombol(
             kartu, "Masuk", self._aksi_masuk, 8, 0,
             gaya={"height": 44, "corner_radius": 10, "fg_color": w["aksen"],
-                  "hover_color": w["aksen_gelap"], "text_color": "#ffffff",
+                  "hover_color": "#0f766e", "text_color": "#ffffff",
                   "font": ("Segoe UI", 14, "bold")},
             sticky="ew", padx=28, pady=(0, 16))
 
-        # --- Kotak informasi akun demo ---
-        demo = ctk.CTkFrame(kartu, fg_color=w["konsol"], corner_radius=12)
-        demo.grid(row=9, column=0, sticky="ew", padx=28, pady=(0, 20))
-        demo.grid_columnconfigure(1, weight=1)
+        # --- Kotak informasi: tombol belum terhubung ke Controller ---
+        info = ctk.CTkFrame(kartu, fg_color=w["konsol"], corner_radius=12)
+        info.grid(row=9, column=0, sticky="ew", padx=28, pady=(0, 20))
+        info.grid_columnconfigure(1, weight=1)
 
-        _label(demo, "Akun demo", 0, 0,
+        _label(info, "Catatan", 0, 0,
                gaya={"font": ("Segoe UI", 11, "bold"),
                      "text_color": w["teks"], "anchor": "w"},
                sticky="w", padx=(14, 8), pady=12)
-        _label(demo, "username: atmin    password: atmin123", 0, 1,
+        _label(info, "Tombol belum berfungsi", 0, 1,
                gaya={"font": ("Consolas", 11), "text_color": w["teks_lunak"],
                      "anchor": "e"},
                sticky="e", padx=(8, 14), pady=12)
 
-        # Tekan Enter untuk langsung memproses login.
+        # Tekan Enter untuk memproses isian.
         masuk = lambda _e: self._aksi_masuk()          # noqa: E731
         bind_event(self.entry_username, "<Return>", masuk)
         bind_event(self.entry_password, "<Return>", masuk)
@@ -159,6 +180,7 @@ class LoginView(ctk.CTkFrame):
     # AKSI TOMBOL
     # ==================================================================
     def _tampilkan_sandi(self) -> None:
+        """Menampilkan atau menyembunyikan isi kolom sandi."""
         self.sandi_terlihat = not self.sandi_terlihat
         self.entry_password.configure(show="" if self.sandi_terlihat else "*")
         self.btn_lihat.configure(
@@ -170,18 +192,43 @@ class LoginView(ctk.CTkFrame):
         )
 
     def _aksi_masuk(self) -> None:
+        """Memeriksa kolom kosong, tombol belum terhubung ke Controller."""
         # Pesan lama dibersihkan agar tidak menumpuk saat mencoba lagi.
         self.label_salah.configure(text="")
 
-        berhasil, pesan, pengguna = self.controller.login(
-            self.entry_username.get().strip(),
-            self.entry_password.get(),
-        )
+        if not self.entry_username.get().strip():
+            self.label_salah.configure(
+                text="Kolom username belum diisi.")
+            self.entry_username.focus_set()
+            return
 
-        if berhasil:
-            self.pengguna_masuk = pengguna
-            self.master.destroy()          # tutup jendela login
-        else:
-            self.label_salah.configure(text=pesan)
+        if not self.entry_password.get():
+            self.label_salah.configure(
+                text="Kolom password belum diisi.")
             self.entry_password.delete(0, "end")
             self.entry_password.focus_set()
+            return
+
+        self.pengguna_masuk = self.entry_username.get().strip()
+        self._tampilkan_pesan()
+
+    def _tampilkan_pesan(self) -> None:
+        """Menampilkan keterangan bahwa tombol belum berfungsi."""
+        messagebox.showinfo("Informasi", PESAN_BELUM,
+                           parent=self.winfo_toplevel())
+
+
+if __name__ == "__main__":
+    # Pengujian antarmuka secara mandiri sesuai langkah pada Modul 5.
+    ctk.set_appearance_mode("light")
+    jendela = ctk.CTk(fg_color="#eff9f6")
+    jendela.title("Login - SIM Laundry")
+    jendela.geometry("880x620")
+    jendela.resizable(False, False)
+    jendela.grid_rowconfigure(0, weight=1)
+    jendela.grid_columnconfigure(0, weight=1)
+
+    tampilan = LoginView(jendela)
+    tampilan.grid(row=0, column=0, sticky="nsew", padx=16, pady=16)
+
+    jendela.mainloop()

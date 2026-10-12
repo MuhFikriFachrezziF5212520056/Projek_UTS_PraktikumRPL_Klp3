@@ -1,9 +1,24 @@
-from datetime import datetime
-import customtkinter as ctk
-from tkinter import ttk
-from views.laundry_view import _gaya_tabel, _label, _tombol, _tabel
+"""
+Antarmuka halaman Dashboard.
 
-# Pasangan label status cucian dengan kunci ringkasan pada Model.
+Sesuai Modul 5, berkas ini berisi antarmuka statis. Kartu ringkasan,
+panel, dan tabel sudah tersusun rapi, tetapi belum dihubungkan ke
+Controller. Angka dan isi tabel diambil dari data contoh pada
+views/laundry_view.py, bukan dari basis data.
+
+Jalankan berkas ini secara mandiri dengan:
+    python views/dashboard_view.py
+"""
+
+from datetime import datetime
+
+import customtkinter as ctk
+
+from views.laundry_view import (
+    DATA_PAKET, DATA_PELANGGAN, DATA_TRANSAKSI, _gaya_tabel, _label,
+    _rp, _tabel, _tombol)
+
+# Pasangan label status cucian dengan kunci ringkasan.
 STATUS_BARIS = (
     ("Antrean", "st_antrean"),
     ("Proses", "st_proses"),
@@ -11,15 +26,17 @@ STATUS_BARIS = (
     ("Diambil", "st_diambil"),
 )
 
-def _rp(nilai) -> str:
-    return f"Rp {float(nilai or 0):,.0f}".replace(",", ".")
+
 def _angka(nilai) -> str:
+    """Mengubah angka menjadi teks dengan pemisah desimal koma."""
     return f"{float(nilai or 0):g}".replace(".", ",")
 
+
 class DashboardView(ctk.CTkFrame):
-    def __init__(self, master, controller, nama_pengguna: str = "operator"):
+    """Halaman ringkasan operasional berupa antarmuka statis."""
+
+    def __init__(self, master, nama_pengguna: str = "operator"):
         super().__init__(master, fg_color="transparent")
-        self.controller = controller
         self.nama_pengguna = nama_pengguna
 
         self.grid_columnconfigure(1, weight=1)
@@ -36,19 +53,17 @@ class DashboardView(ctk.CTkFrame):
         self.muat_data()
 
     # ==================================================================
-    # konstruksi komponen
+    # KONSTRUKSI KOMPONEN
     # ==================================================================
     def _build_sapaan(self) -> None:
-        tebal = {"font": ("Segoe UI", 20, "bold"), "anchor": "w"}
-        self.label_sapaan = _label(self, f"Halo, {self.nama_pengguna}!",
-                                  0, 0, columnspan=3, gaya=tebal,
-                                  sticky="w", pady=(0, 2))
+        self.label_sapaan = _label(
+            self, f"Halo, {self.nama_pengguna}!", 0, 0, columnspan=3,
+            gaya={"font": ("Segoe UI", 20, "bold"), "anchor": "w"},
+            sticky="w", pady=(0, 2))
 
-        # Tombol refresh agar angka ringkasan dapat disegarkan tanpa
-        # harus menutup lalu menjalankan ulang aplikasi.
         self.btn_refresh = _tombol(
-            self, "\u21bb  Refresh", self.muat_data, 0, 3,
-            gaya={"width": 110, "height": 34, "corner_radius": 12},
+            self, "\u21bb  Muat Ulang", self.muat_data, 0, 3,
+            gaya={"width": 130, "height": 34, "corner_radius": 12},
             sticky="e")
 
         abu = {"text_color": "gray", "anchor": "w"}
@@ -57,12 +72,11 @@ class DashboardView(ctk.CTkFrame):
             columnspan=3, gaya={**abu, "font": ("Segoe UI", 12)},
             sticky="w", pady=(0, 14))
 
-        # Menampilkan jam saat data terakhir diambil dari basis data.
-        self.label_waktu = _label(self, "", 1, 3,
-                                  gaya={"text_color": "gray",
-                                        "anchor": "e",
-                                        "font": ("Segoe UI", 10)},
-                                  sticky="e", pady=(0, 14))
+        self.label_waktu = _label(
+            self, "", 1, 3,
+            gaya={"text_color": "gray", "anchor": "e",
+                  "font": ("Segoe UI", 10)},
+            sticky="e", pady=(0, 14))
 
     def _build_kartu(self) -> None:
         self.frame_kartu = ctk.CTkFrame(self, fg_color="transparent")
@@ -82,6 +96,7 @@ class DashboardView(ctk.CTkFrame):
             3, "Total Pendapatan", "Akumulasi seluruh transaksi")
 
     def _satu_kartu(self, kolom, judul, keterangan) -> ctk.CTkLabel:
+        """Membuat satu kartu ringkasan dan mengembalikan label nilainya."""
         bingkai = ctk.CTkFrame(self.frame_kartu, corner_radius=14)
         bingkai.grid(row=0, column=kolom, sticky="nsew",
                      padx=(0 if kolom == 0 else 5, 5))
@@ -105,12 +120,11 @@ class DashboardView(ctk.CTkFrame):
                gaya={"font": ("Segoe UI", 14, "bold"), "anchor": "w"},
                sticky="w", pady=(0, 6))
 
-        # Ringkasan kelengkapan data kontak di sisi kanan judul.
         abu = {"text_color": "gray", "anchor": "e"}
-        self.label_kontak_info = _label(self, "", 3, 2, columnspan=2,
-                                        gaya={**abu,
-                                              "font": ("Segoe UI", 11)},
-                                        sticky="e", padx=(0, 8), pady=(0, 6))
+        self.label_kontak_info = _label(
+            self, "", 3, 2, columnspan=2,
+            gaya={**abu, "font": ("Segoe UI", 11)},
+            sticky="e", padx=(0, 8), pady=(0, 6))
 
         self.frame_kontak = ctk.CTkFrame(self)
         bingkai = self.frame_kontak
@@ -167,7 +181,6 @@ class DashboardView(ctk.CTkFrame):
                gaya={"font": ("Segoe UI", 14, "bold"), "anchor": "w"},
                sticky="w", pady=(18, 6))
 
-        # Akumulasi berat dicantumkan di sisi kanan judul tabel.
         abu = {"font": ("Segoe UI", 11), "text_color": "gray", "anchor": "e"}
         self.label_berat = _label(self, "", 5, 3, gaya=abu,
                                   sticky="e", padx=(0, 8), pady=(18, 6))
@@ -188,93 +201,133 @@ class DashboardView(ctk.CTkFrame):
         ))
 
     # ==================================================================
-    # PEMUATAN DATA
+    # PENGISIAN DARI DATA CONTOH
     # ==================================================================
     def muat_data(self) -> None:
-        data = self.controller.ringkasan()
-        if not data:
-            return
-
-        self._isi_kartu(data)
-        self._isi_subjudul(data)
-        self._isi_kontak_info(data)
-        self._isi_status(data)
-        self._isi_terbaru(data)
+        """Mengisi seluruh halaman dari data contoh."""
+        ringkasan = self._hitung_ringkasan()
+        self._isi_kartu(ringkasan)
+        self._isi_subjudul(ringkasan)
+        self._isi_kontak_info(ringkasan)
+        self._isi_status(ringkasan)
+        self._isi_terbaru(ringkasan)
         self._isi_kontak()
         self._tandai_waktu()
 
+    def _hitung_ringkasan(self) -> dict:
+        """Menyusun angka ringkasan dari data contoh."""
+        status = {kunci: 0 for _nama, kunci in STATUS_BARIS}
+        berat = 0
+        pendapatan = 0
+        for baris in DATA_TRANSAKSI:
+            kunci = f"st_{baris['status'].lower()}"
+            if kunci in status:
+                status[kunci] += 1
+            berat += baris["berat"]
+            pendapatan += baris["total"]
+
+        total_cucian = sum(status.values())
+        return {
+            "total_pelanggan": len(DATA_PELANGGAN),
+            "total_paket": len(DATA_PAKET),
+            "total_transaksi": len(DATA_TRANSAKSI),
+            "total_pendapatan": pendapatan,
+            "total_cucian": total_cucian,
+            "total_berat": berat,
+            "rata_berat": round(berat / total_cucian, 1) if total_cucian else 0,
+            "pelanggan_kontak": sum(
+                1 for o in DATA_PELANGGAN if o["no_telp"]),
+            **status,
+        }
+
     def _isi_kartu(self, data: dict) -> None:
+        """Menampilkan angka ke dalam empat kartu ringkasan."""
         self.label_pelanggan.configure(text=str(data["total_pelanggan"]))
         self.label_paket.configure(text=str(data["total_paket"]))
         self.label_transaksi.configure(text=str(data["total_transaksi"]))
         self.label_pendapatan.configure(text=_rp(data["total_pendapatan"]))
 
     def _isi_subjudul(self, data: dict) -> None:
+        """Mengubah kalimat subjudul sesuai jumlah cucian tercatat."""
         self.label_subjudul.configure(
-            text="Ringkasan operasional jasa laundry \u00b7 hari ini "
-                 f"{int(data.get('trx_hari_ini') or 0)} transaksi "
-                 f"({_rp(data.get('pendapatan_hari_ini'))}).")
+            text="Ringkasan operasional jasa laundry \u00b7 "
+                 f"{data['total_cucian']} cucian tercatat di semua status.")
 
     def _isi_kontak_info(self, data: dict) -> None:
-        jumlah_pelanggan = int(data.get("total_pelanggan") or 0)
-        lengkap = int(data.get("pelanggan_kontak") or 0)
-        kurang = jumlah_pelanggan - lengkap
+        """Mengubah ringkasan kelengkapan data kontak pelanggan."""
+        jumlah = data["total_pelanggan"]
+        lengkap = data["pelanggan_kontak"]
+        kurang = jumlah - lengkap
 
-        catatan = f"{lengkap}/{jumlah_pelanggan} pelanggan punya nomor telepon"
-        if kurang > 0:
-            catatan += f" \u00b7 {kurang} belum"
-        else:
-            catatan += " \u00b7 lengkap"
+        catatan = f"{lengkap}/{jumlah} pelanggan punya nomor telepon"
+        catatan += f" \u00b7 {kurang} belum" if kurang else " \u00b7 lengkap"
         self.label_kontak_info.configure(text=catatan)
 
     def _isi_status(self, data: dict) -> None:
-        total_cucian = sum(int(data.get(kunci) or 0) for _, kunci in STATUS_BARIS)
-
-        for _, kunci in STATUS_BARIS:
+        """Menampilkan jumlah dan panjang batang pada tiap status."""
+        total_cucian = data["total_cucian"]
+        for _nama, kunci in STATUS_BARIS:
             batang, jumlah = self.bar_status[kunci]
-            nilai = int(data.get(kunci) or 0)
+            nilai = data[kunci]
             jumlah.configure(text=str(nilai))
             batang.set(nilai / total_cucian if total_cucian else 0.0)
 
-        if total_cucian:
-            self.label_total_cucian.configure(
-                text=f"Total {total_cucian} cucian tercatat di semua status.")
-        else:
-            self.label_total_cucian.configure(
-                text="Belum ada cucian tercatat.")
+        self.label_total_cucian.configure(
+            text=f"Total {total_cucian} cucian tercatat di semua status."
+            if total_cucian else "Belum ada cucian tercatat.")
 
     def _isi_terbaru(self, data: dict) -> None:
+        """Mengisi tabel transaksi terbaru."""
         self.label_berat.configure(
-            text=f"{_angka(data.get('total_berat'))} kg total"
-                 f" \u00b7 rata-rata {_angka(data.get('rata_berat'))} kg")
+            text=f"{_angka(data['total_berat'])} kg total"
+                 f" \u00b7 rata-rata {_angka(data['rata_berat'])} kg")
 
         for item in self.tree_terbaru.get_children():
             self.tree_terbaru.delete(item)
 
-        for baris in self.controller.ambil_transaksi()[:5]:
+        for baris in DATA_TRANSAKSI[:5]:
             self.tree_terbaru.insert("", "end", values=(
-                baris["id_transaksi"],
-                baris["nama_pelanggan"],
-                baris.get("no_telp_pelanggan") or "-",
-                baris["nama_paket"],
-                _rp(baris["total_biaya"]),
-                baris["status_cucian"],
+                baris["id"],
+                baris["pelanggan"],
+                baris["telp"] or "-",
+                baris["paket"],
+                _rp(baris["total"]),
+                baris["status"],
             ))
 
     def _isi_kontak(self) -> None:
+        """Mengisi tabel kontak pelanggan beserta total belanjanya."""
         for item in self.tree_kontak.get_children():
             self.tree_kontak.delete(item)
 
-        for data in self.controller.ambil_kontak_pelanggan():
+        for orang in DATA_PELANGGAN:
+            milik = [b for b in DATA_TRANSAKSI
+                     if b["pelanggan"] == orang["nama"]]
             self.tree_kontak.insert("", "end", values=(
-                data["nama"],
-                data.get("no_telp") or "-",
-                data.get("alamat") or "-",
-                int(data.get("jumlah_transaksi") or 0),
-                _rp(data.get("total_belanja")),
+                orang["nama"],
+                orang["no_telp"] or "-",
+                orang["alamat"] or "-",
+                len(milik),
+                _rp(sum(b["total"] for b in milik)),
             ))
 
     def _tandai_waktu(self) -> None:
+        """Menampilkan jam saat tampilan dibuat ulang."""
         if self.label_waktu is not None:
             self.label_waktu.configure(
                 text=f"Terakhir diperbarui {datetime.now():%H:%M:%S}")
+
+
+if __name__ == "__main__":
+    # Pengujian antarmuka secara mandiri sesuai langkah pada Modul 5.
+    ctk.set_appearance_mode("light")
+    jendela = ctk.CTk()
+    jendela.title("Halaman Dashboard")
+    jendela.geometry("1180x760")
+    jendela.grid_rowconfigure(0, weight=1)
+    jendela.grid_columnconfigure(0, weight=1)
+
+    tampilan = DashboardView(jendela, "atmin")
+    tampilan.grid(row=0, column=0, sticky="nsew")
+
+    jendela.mainloop()

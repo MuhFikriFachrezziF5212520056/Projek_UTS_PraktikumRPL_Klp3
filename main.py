@@ -1,12 +1,21 @@
+"""
+SIM Laundry - halaman tampilan.
+
+Sesuai Modul 5, program ini hanya merakit antarmuka. Tidak ada
+Controller, tidak ada Model, dan tidak ada koneksi basis data. Isi
+setiap halaman diambil dari data contoh di dalam berkas view.
+
+Model pada folder models tetap tersedia dan tidak diubah oleh berkas
+ini. Model tersebut sudah diuji secara mandiri melalui test_model.py
+sesuai langkah pada Modul 4.
+"""
+
 import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent))
 import customtkinter as ctk
-from tkinter import messagebox
 
-from config.database import Database
-from controller.laundry_controller import LaundryController
 from views.login_view import LoginView
 from views.dashboard_view import DashboardView
 from views.laundry_view import LaundryView, _label, _tombol
@@ -27,37 +36,48 @@ TEKS = "#0f3d38"         # teks utama
 TEKS_LUNAK = "#5f8a84"   # teks keterangan
 MERAH = "#f43f5e"        # tombol hapus
 
+
+# ==================================================================
+# UTILITAS
+# ==================================================================
 def terapkan_tema() -> None:
+    """Mengatur tampilan terang dan tema warna bawaan."""
     ctk.set_appearance_mode("light")
     ctk.set_default_color_theme("blue")
 
-def koneksi_tersedia() -> bool:
-    conn = Database().get_connection()
-    if conn is None:
-        return False
-    conn.close()
-    return True
 
-def buka_jendela_login(controller) -> str:
+def buka_jendela_login() -> str:
+    """
+    Menampilkan jendela login lalu mengembalikan nama pengguna.
+
+    Karena tombol masuk belum dihubungkan ke Controller, nama pengguna
+    diambil dari apa yang diketik operator pada kolom username.
+    """
     jendela = ctk.CTk(fg_color=LATAR)
     jendela.title("Login - SIM Laundry")
     jendela.geometry("880x620")
     jendela.resizable(False, False)
 
-    view = LoginView(jendela, controller)
+    view = LoginView(jendela)
     view.grid(row=0, column=0, sticky="nsew", padx=16, pady=16)
     jendela.grid_rowconfigure(0, weight=1)
     jendela.grid_columnconfigure(0, weight=1)
 
     jendela.mainloop()
 
-    # Bila jendela ditutup tanpa login, aplikasi dihentikan.
+    # Bila jendela ditutup tanpa mengisi nama pengguna, aplikasi
+    # dihentikan.
     if getattr(view, "pengguna_masuk", None) is None:
         raise SystemExit
 
     return view.pengguna_masuk
 
+
+# ==================================================================
+# JENDELA UTAMA
+# ==================================================================
 def _sidebar(bangunan, pengguna: str, aktif: str):
+    """Membangun sidebar berisi logo, menu navigasi, dan kartu pengguna."""
     sisi = ctk.CTkFrame(bangunan, width=232, corner_radius=0,
                         fg_color=SIDE)
     sisi.pack(side="left", fill="y")
@@ -109,7 +129,8 @@ def _sidebar(bangunan, pengguna: str, aktif: str):
     return sisi, menu, kartu
 
 
-def buka_jendela_utama(controller, pengguna: str) -> None:
+def buka_jendela_utama(pengguna: str) -> None:
+    """Menampilkan jendela utama yang memuat dashboard dan transaksi."""
     jendela = ctk.CTk(fg_color=LATAR)
     jendela.title(JUDUL)
     jendela.geometry("1260x780+20+20")
@@ -124,7 +145,7 @@ def buka_jendela_utama(controller, pengguna: str) -> None:
     konten.grid_columnconfigure(0, weight=1)
 
     _label(konten, "Selamat datang di Sistem Informasi "
-                "Manajemen Operasional Jasa Laundry", 0, 0,
+                   "Manajemen Operasional Jasa Laundry", 0, 0,
            gaya={"font": ("Segoe UI", 12), "text_color": TEKS_LUNAK,
                  "anchor": "w"},
            sticky="ew", padx=22, pady=(18, 8))
@@ -135,8 +156,8 @@ def buka_jendela_utama(controller, pengguna: str) -> None:
     wadah.grid_columnconfigure(0, weight=1)
 
     # --- Dua View, ditumpuk dan ditampilkan sesuai menu yang dipilih ---
-    view_dashboard = DashboardView(wadah, controller, pengguna)
-    view_transaksi = LaundryView(wadah, controller)
+    view_dashboard = DashboardView(wadah, pengguna)
+    view_transaksi = LaundryView(wadah)
 
     for tampilan in (view_dashboard, view_transaksi):
         tampilan.configure(fg_color=LATAR)
@@ -147,7 +168,7 @@ def buka_jendela_utama(controller, pengguna: str) -> None:
                     view_transaksi.frame_tabel):
         bingkai.configure(fg_color=KARTU, corner_radius=14)
 
-    # Kartu ringkasan dan tombol refresh mengikuti warna tema mint.
+    # Kartu ringkasan dan tombol muat ulang mengikuti warna tema mint.
     for kartu_kecil in view_dashboard.frame_kartu_isi:
         kartu_kecil.configure(fg_color=KARTU)
     view_dashboard.btn_refresh.configure(fg_color=MINT, hover_color=MINT_GELAP)
@@ -155,7 +176,7 @@ def buka_jendela_utama(controller, pengguna: str) -> None:
     view_transaksi.grid_columnconfigure(1, weight=1)
 
     def tampilkan(nama: str) -> None:
-        """Menampilkan View sesuai menu dan menyegarkan isinya."""
+        """Menampilkan View sesuai menu yang dipilih."""
         for kunci, tombol in menu.items():
             terpilih = kunci == nama
             tombol.configure(
@@ -163,11 +184,8 @@ def buka_jendela_utama(controller, pengguna: str) -> None:
                 text_color=MINT_GELAP if terpilih else TEKS,
             )
         if nama == "Dashboard":
-            view_dashboard.muat_data()
             view_dashboard.tkraise()
         else:
-            view_transaksi.muat_data_pendukung()
-            view_transaksi.muat_daftar()
             view_transaksi.tkraise()
 
     menu["Dashboard"].configure(command=lambda: tampilkan("Dashboard"))
@@ -179,31 +197,21 @@ def buka_jendela_utama(controller, pengguna: str) -> None:
     jendela.mainloop()
 
 
+# ==================================================================
+# TITIK MASUK
+# ==================================================================
 def main() -> None:
-    """Merakit View + Controller lalu menjalankan aplikasi."""
-    # 1. Pastikan server MySQL aktif dan database db_laundry tersedia.
-    if not koneksi_tersedia():
-        jalan = messagebox.askyesno(
-            "Basis Data Tidak Terjangkau",
-            "Tidak dapat terhubung ke MySQL.\n\n"
-            "Pastikan Laragon berjalan dan database 'db_laundry' sudah "
-            "dibuat. Tetap jalankan aplikasi?",
-            icon="warning",
-        )
-        if not jalan:
-            return
-
-    # 2. Tampilan bertema mint.
+    """Merakit seluruh tampilan lalu menjalankan aplikasi."""
+    # 1. Tampilan bertema mint.
     terapkan_tema()
-    # 3. Bangun Controller.
-    controller = LaundryController()
-    # 4. Login lebih dahulu, baru jendela utama.
+    # 2. Login lebih dahulu, baru jendela utama.
     try:
-        pengguna = buka_jendela_login(controller)
+        pengguna = buka_jendela_login()
     except SystemExit:
         return
 
-    buka_jendela_utama(controller, pengguna)
+    buka_jendela_utama(pengguna)
+
 
 if __name__ == "__main__":
     main()

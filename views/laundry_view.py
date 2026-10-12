@@ -1,14 +1,82 @@
+"""
+Antarmuka halaman Transaksi Laundry.
+
+Sesuai Modul 5, berkas ini berisi antarmuka statis. Form, tombol, dan
+tabel sudah tersusun rapi, tetapi belum dihubungkan ke Controller.
+Karena itu tombol Simpan, Perbarui, dan Hapus hanya menampilkan
+keterangan bahwa tombol tersebut belum berfungsi.
+
+Isi tabel dan daftar pilihan diambil dari data contoh di bawah, bukan
+dari basis data. Model pada folder models tetap tersedia dan tidak
+diubah oleh berkas ini.
+
+Jalankan berkas ini secara mandiri dengan:
+    python views/laundry_view.py
+"""
+
 from datetime import date
+
 import customtkinter as ctk
 from tkinter import ttk, messagebox
 
+# ==================================================================
+# DATA CONTOH
+#
+# Hanya untuk mengisi tampilan. Tidak pernah dikirim ke basis data.
+# ==================================================================
+DATA_PELANGGAN = [
+    {"nama": "Heather", "no_telp": "082637261726", "alamat": "Tondo"},
+    {"nama": "Fikri", "no_telp": "081125456756", "alamat": "Palu"},
+    {"nama": "Muh", "no_telp": "081122435576", "alamat": "Arab"},
+    {"nama": "Rusli", "no_telp": "081333444555", "alamat": "Manado"},
+    {"nama": "Sinta", "no_telp": "081444555666", "alamat": "Gorontalo"},
+]
+
+DATA_PAKET = [
+    {"nama": "Cuci Kering", "jenis": "Cuci Kering", "harga": 7000},
+    {"nama": "Cuci Basah", "jenis": "Cuci Basah", "harga": 8000},
+    {"nama": "Pembersihan Karpet", "jenis": "Pembersihan Karpet",
+     "harga": 15000},
+    {"nama": "Setrika", "jenis": "Setrika", "harga": 5000},
+]
+
+DATA_TRANSAKSI = [
+    {"id": 1, "pelanggan": "Heather", "telp": "082637261726",
+     "paket": "Cuci Kering", "berat": 5, "total": 35000, "status": "Selesai"},
+    {"id": 2, "pelanggan": "Fikri", "telp": "081125456756",
+     "paket": "Setrika", "berat": 4, "total": 20000, "status": "Proses"},
+    {"id": 3, "pelanggan": "Muh", "telp": "081122435576",
+     "paket": "Cuci Basah", "berat": 6, "total": 48000, "status": "Antrean"},
+    {"id": 4, "pelanggan": "Rusli", "telp": "081333444555",
+     "paket": "Pembersihan Karpet", "berat": 3, "total": 45000,
+     "status": "Selesai"},
+    {"id": 5, "pelanggan": "Sinta", "telp": "081444555666",
+     "paket": "Cuci Kering", "berat": 7, "total": 49000, "status": "Diambil"},
+]
+
+STATUS_CUCIAN = ["Antrean", "Proses", "Selesai", "Diambil"]
+
+DAFTAR_JENIS = ["Cuci Kering", "Cuci Basah", "Setrika",
+                "Pembersihan Karpet", "Lipat"]
+
+# Keterangan yang muncul ketika tombol ditekan.
+PESAN_BELUM = ("Tombol ini belum berfungsi.\n\n"
+               "Sesuai Modul 5, antarmuka pada tahap ini belum "
+               "dihubungkan ke Controller.")
+
+
+# ==================================================================
+# HELPER TAMPILAN
+# ==================================================================
 # Palet tabel agar senada dengan tema customtkinter.
 _GELAP = {"bg": "#2b2b2b", "fg": "#e8e8e8", "head_bg": "#3a3a3a",
           "head_fg": "#ffffff", "sel_bg": "#1f6aa5"}
 _TERANG = {"bg": "#ffffff", "fg": "#1a1a1a", "head_bg": "#e6e6e6",
            "head_fg": "#1a1a1a", "sel_bg": "#1f6aa5"}
 
+
 def _gaya_tabel(mode) -> ttk.Style:
+    """Menyesuaikan warna tabel dengan tema yang sedang dipakai."""
     p = _GELAP if str(mode).strip().lower().startswith("dark") else _TERANG
     gaya = ttk.Style()
     try:
@@ -29,17 +97,23 @@ def _gaya_tabel(mode) -> ttk.Style:
                    arrowcolor=p["fg"])
     return gaya
 
-# Nilai yang disediakan untuk kolom jenis layanan.
-DAFTAR_JENIS = ["Cuci Kering", "Cuci Basah", "Setrika",
-                "Pembersihan Karpet", "Lipat"]
 
 def bind_event(widget, event: str, fungsi) -> None:
+    """Mengikat kejadian pada bagian dalam widget customtkinter."""
     internal = getattr(widget, "_entry", None)
     if internal is not None:
         internal.bind(event, fungsi)
 
+
 def _tanggal_hari_ini() -> str:
+    """Mengembalikan tanggal hari ini dalam format tahun-bulan-hari."""
     return date.today().isoformat()
+
+
+def _rp(nilai) -> str:
+    """Mengubah angka menjadi teks bergaya Rupiah."""
+    return f"Rp {float(nilai or 0):,.0f}".replace(",", ".")
+
 
 def _label(bapak, teks, baris=0, kolom=0, *, gaya=None, **tempat):
     """Menempatkan satu label ke dalam wadah."""
@@ -47,8 +121,9 @@ def _label(bapak, teks, baris=0, kolom=0, *, gaya=None, **tempat):
     label.grid(row=baris, column=kolom, **tempat)
     return label
 
+
 def _input(bapak, kelas, baris=0, kolom=0, *, gaya=None, **tempat):
-    """Menempatkan widget isian, yaitu CTkEntry atau CTkComboBox."""
+    """Menempatkan widget isian, yaitu kolom teks atau kotak pilihan."""
     widget = kelas(bapak, **(gaya or {}))
     widget.grid(row=baris, column=kolom, **tempat)
     return widget
@@ -64,6 +139,13 @@ def _tombol(bapak, teks, perintah=None, baris=0, kolom=0, *, gaya=None,
 
 
 def _tabel(bapak, kolom, *, baris=1, tinggi=3):
+    """
+    Membuat tabel beserta judul dan lebar kolomnya.
+
+    Setiap isi kolom berbentuk (nama, judul, lebar, jangkar). Kolom yang
+    rata kiri ikut melar mengikuti lebar jendela, selain itu lebarnya
+    dikunci supaya tabel tidak bergeser.
+    """
     pohon = ttk.Treeview(bapak, columns=tuple(k for k, _j, _l, _a in kolom),
                           show="headings", height=tinggi,
                           style="Laundry.Treeview")
@@ -74,25 +156,36 @@ def _tabel(bapak, kolom, *, baris=1, tinggi=3):
     pohon.grid(row=baris, column=0, sticky="nsew", padx=10, pady=(4, 10))
     return pohon
 
+
 def _isi(kolom, teks) -> None:
+    """Mengosongkan lalu mengisi satu kolom isian dalam satu perintah."""
     kolom.delete(0, "end")
     if teks not in (None, ""):
         kolom.insert(0, str(teks))
 
+
+def _cari(teks, sumber):
+    """Mencari nama pada daftar data contoh tanpa huruf besar kecil."""
+    target = str(teks or "").strip().lower()
+    for item in sumber:
+        if str(item["nama"]).strip().lower() == target:
+            return item
+    return None
+
+
+# ==================================================================
+# ANTARMUKA TRANSAKSI
+# ==================================================================
 class LaundryView(ctk.CTkFrame):
-    def __init__(self, master, controller):
+    """Halaman transaksi laundry berupa antarmuka statis."""
+
+    def __init__(self, master):
         super().__init__(master, fg_color="transparent")
-        self.controller = controller
-        self.id_terpilih = None
-        self._paket = []        # daftar paket untuk mencari harga
-        self._pelanggan = []    # daftar pelanggan untuk mengenali nama
 
         _gaya_tabel(ctk.get_appearance_mode())
         self._build_form()
         self._build_tabel()
-        self._isi_tanggal_default()
-
-        self.muat_data_pendukung()
+        self.muat_data_contoh()
         self.muat_daftar()
 
     # ==================================================================
@@ -111,8 +204,6 @@ class LaundryView(ctk.CTkFrame):
                gaya={"font": ("Segoe UI", 14, "bold"), "anchor": "w"},
                sticky="w", pady=(0, 6))
 
-        # Frame disimpan sebagai atribut agar warna tema dapat
-        # disesuaikan dari main.py.
         self.frame_form = ctk.CTkFrame(self)
         form = self.frame_form
         form.grid(row=1, column=0, sticky="nsew", padx=(0, 12))
@@ -132,10 +223,10 @@ class LaundryView(ctk.CTkFrame):
             gaya={"state": "normal", "values": ["-"]},
             sticky="ew", padx=(10, 4), pady=2)
         bind_event(self.combo_pelanggan, "<KeyRelease>",
-                  self._pelanggan_diubah)
+                   self._pelanggan_diubah)
 
         self.btn_hapus_pelanggan = _tombol(
-            form, "Hapus", self._aksi_hapus_pelanggan, 1, 1,
+            form, "Hapus", self._belum_terhubung, 1, 1,
             gaya={**kecil, **merah}, padx=(0, 12), pady=2)
 
         self.combo_paket = _input(
@@ -148,7 +239,7 @@ class LaundryView(ctk.CTkFrame):
             gaya=kecil, padx=4, pady=2)
 
         self.btn_hapus_paket = _tombol(
-            form, "Hapus", self._aksi_hapus_paket, 1, 4,
+            form, "Hapus", self._belum_terhubung, 1, 4,
             gaya={**kecil, **merah}, padx=(4, 10), pady=2)
 
         # --- Baris 2: Nomor Telepon dan Alamat pelanggan ---
@@ -169,10 +260,10 @@ class LaundryView(ctk.CTkFrame):
                                   gaya={"placeholder_text": "Contoh: 3.5"},
                                   sticky="ew", padx=(10, 12), pady=2)
         bind_event(self.entry_berat, "<KeyRelease>",
-                  lambda _e: self._hitung_otomatis())
+                   lambda _e: self._hitung_total())
         self.combo_status = _input(form, ctk.CTkComboBox, 5, 2, columnspan=3,
                                    gaya={"state": "readonly",
-                                         "values": ["Antrean"]},
+                                         "values": STATUS_CUCIAN},
                                    sticky="ew", padx=(12, 10), pady=2)
 
         # --- Baris 4: Tanggal Terima dan Tanggal Selesai ---
@@ -186,7 +277,6 @@ class LaundryView(ctk.CTkFrame):
                                           "YYYY-MM-DD (opsional)"},
                                     sticky="ew", padx=(12, 10), pady=2)
 
-        # Ringkasan total - dihitung Controller, hanya ditampilkan di sini.
         self.label_total = _label(form, "Total Biaya: Rp 0", 8, 0,
                                   columnspan=5,
                                   gaya={"font": ("Segoe UI", 14, "bold")},
@@ -199,22 +289,20 @@ class LaundryView(ctk.CTkFrame):
         tombol.grid_columnconfigure((0, 1, 2), weight=1)
 
         aksi = {"height": 34}
-        _tombol(tombol, "Simpan Data", self._aksi_simpan, 0, 0,
+        _tombol(tombol, "Simpan Data", self._belum_terhubung, 0, 0,
                 gaya=aksi, sticky="ew", padx=(0, 4))
-        _tombol(tombol, "Perbarui", self._aksi_perbarui, 0, 1,
+        _tombol(tombol, "Perbarui", self._belum_terhubung, 0, 1,
                 gaya={**aksi, "fg_color": "#1f6aa5"}, sticky="ew", padx=4)
-        _tombol(tombol, "Hapus", self._aksi_hapus, 0, 2,
+        _tombol(tombol, "Hapus", self._belum_terhubung, 0, 2,
                 gaya={**aksi, **merah}, sticky="ew", padx=(4, 0))
 
+    # ==================================================================
+    # TABEL TRANSAKSI
+    # ==================================================================
     def _build_tabel(self) -> None:
-        judul = {"font": ("Segoe UI", 14, "bold"), "anchor": "w"}
-        _label(self, "Daftar Transaksi", 0, 1, gaya=judul,
+        _label(self, "Daftar Transaksi", 0, 1,
+               gaya={"font": ("Segoe UI", 14, "bold"), "anchor": "w"},
                sticky="w", pady=(0, 6))
-
-        # Petunjuk hanya muncul bila paket layanan belum tersedia.
-        self.label_petunjuk = _label(self, "", 2, 1,
-                                     gaya={"text_color": "#e8a33d",
-                                           "anchor": "w"})
 
         self.frame_tabel = ctk.CTkFrame(self)
         bingkai = self.frame_tabel
@@ -222,13 +310,14 @@ class LaundryView(ctk.CTkFrame):
         bingkai.grid_rowconfigure(1, weight=1)
         bingkai.grid_columnconfigure(0, weight=1)
 
-        kolom = (("id", "ID", 45, "center"), ("pelanggan", "Pelanggan",
-                                               150, "w"),
-                 ("paket", "Paket", 120, "w"), ("berat", "Berat", 70, "e"),
-                 ("total", "Total Biaya", 110, "e"),
-                 ("status", "Status", 90, "center"))
-        self.tree = _tabel(bingkai, kolom, tinggi=14)
-        self.tree.grid_configure(pady=(4, 6))
+        self.tree = _tabel(bingkai, (
+            ("id", "ID", 45, "center"),
+            ("pelanggan", "Pelanggan", 150, "w"),
+            ("paket", "Paket", 120, "w"),
+            ("berat", "Berat", 70, "e"),
+            ("total", "Total Biaya", 110, "e"),
+            ("status", "Status", 90, "center"),
+        ), tinggi=14)
         self.tree.bind("<<TreeviewSelect>>", self._baris_dipilih)
 
         scroll = ttk.Scrollbar(bingkai, orient="vertical",
@@ -237,82 +326,102 @@ class LaundryView(ctk.CTkFrame):
         scroll.grid(row=1, column=1, sticky="ns", padx=(0, 10), pady=(4, 6))
         self.tree.configure(yscrollcommand=scroll.set)
 
-        _tombol(bingkai, "Muat Ulang Data", self.muat_daftar, 2, 0,
+        _tombol(bingkai, "Muat Ulang Tampilan", self.muat_daftar, 2, 0,
                 columnspan=2, gaya={"height": 28, "fg_color": "transparent",
                                     "border_width": 1,
                                     "text_color": "gray"},
                 sticky="ew", padx=10, pady=(0, 10))
 
     # ==================================================================
-    # TANGGAL TERIMA OTOMATIS
+    # PENGISIAN DARI DATA CONTOH
+    # ==================================================================
+    def muat_data_contoh(self) -> None:
+        """Mengisi daftar pilihan dengan isi data contoh."""
+        nama = [d["nama"] for d in DATA_PELANGGAN] or ["-"]
+        self.combo_pelanggan.configure(values=nama)
+        self.combo_pelanggan.set(nama[0])
+
+        paket = [d["nama"] for d in DATA_PAKET] or ["-"]
+        self.combo_paket.configure(values=paket)
+        self.combo_paket.set(paket[0])
+
+        self.combo_status.configure(values=STATUS_CUCIAN)
+        self.combo_status.set(STATUS_CUCIAN[0])
+
+        self._isi_tanggal_default()
+        self._isi_kontak()
+
+    def muat_daftar(self) -> None:
+        """Mengisi tabel dengan data contoh transaksi."""
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        for baris in DATA_TRANSAKSI:
+            self.tree.insert("", "end", values=(
+                baris["id"],
+                baris["pelanggan"],
+                baris["paket"],
+                f"{baris['berat']:g} kg",
+                _rp(baris["total"]),
+                baris["status"],
+            ))
+
+    def _baris_dipilih(self, _event=None) -> None:
+        """Menyalin isi baris tabel yang dipilih ke dalam form."""
+        pilihan = self.tree.selection()
+        if not pilihan:
+            return
+
+        id_terpilih = self.tree.item(pilihan[0], "values")[0]
+        for baris in DATA_TRANSAKSI:
+            if str(baris["id"]) != str(id_terpilih):
+                continue
+            self.combo_pelanggan.set(baris["pelanggan"])
+            self._isi_kontak()
+            self.combo_paket.set(baris["paket"])
+            _isi(self.entry_berat, f"{baris['berat']:g}")
+            _isi(self.entry_telp, baris["telp"])
+            self.combo_status.set(baris["status"])
+            self._hitung_total()
+            break
+
+    # ==================================================================
+    # PENGISIAN FORM
     # ==================================================================
     def _isi_tanggal_default(self) -> None:
+        """Mengisi tanggal terima dengan hari ini bila kolom masih kosong."""
         if not self.entry_terima.get().strip():
             _isi(self.entry_terima, _tanggal_hari_ini())
 
     def _pelanggan_diubah(self, _event=None) -> None:
+        """Menampilkan kontak pelanggan contoh sesuai nama yang diketik."""
         self._isi_tanggal_default()
-        self._isi_kontak_pelanggan()
-        self._hitung_otomatis()
+        self._isi_kontak()
+        self._hitung_total()
 
-    def _isi_kontak_pelanggan(self) -> None:
-        data = self.controller.detail_pelanggan(self.combo_pelanggan.get().strip())
-        _isi(self.entry_telp, data and data.get("no_telp"))
-        _isi(self.entry_alamat, data and data.get("alamat"))
+    def _isi_kontak(self) -> None:
+        """Mengisi kolom telepon dan alamat dari daftar data contoh."""
+        data = _cari(self.combo_pelanggan.get(), DATA_PELANGGAN)
+        _isi(self.entry_telp, data and data["no_telp"])
+        _isi(self.entry_alamat, data and data["alamat"])
 
-    # ==================================================================
-    # DATA PENDUKUNG
-    # ==================================================================
-    def muat_data_pendukung(self) -> None:
-        self._pelanggan = self.controller.ambil_pelanggan()
-        nama = [d["nama"] for d in self._pelanggan] or ["-"]
-        self.combo_pelanggan.configure(values=nama)
-        self.combo_pelanggan.set(nama[0])
-
-        self._paket = self.controller.ambil_paket()
-        paket = [d["nama_paket"] for d in self._paket] or ["-"]
-        self.combo_paket.configure(values=paket)
-        self.combo_paket.set(paket[0])
-
-        status = list(self.controller.ambil_status())
-        self.combo_status.configure(values=status)
-        self.combo_status.set(status[0])
-
-        self._perbarui_petunjuk()
-
-    def _perbarui_petunjuk(self) -> None:
-        if self._paket:
-            self.label_petunjuk.configure(text="")
-            self.label_petunjuk.grid_remove()
-        else:
-            self.label_petunjuk.configure(
-                text="Katalog paket masih kosong. Tekan tombol "
-                     "'+ Paket' untuk menambah layanan pertama.")
-            self.label_petunjuk.grid(row=2, column=1, sticky="w",
-                                     pady=(6, 0))
-
-    def _id_paket_terpilih(self):
-        if self.controller.cari_id_paket:
-            return self.controller.cari_id_paket(self.combo_paket.get())
-        for item in self._paket:
-            if item["nama_paket"] == self.combo_paket.get():
-                return item["id_paket"]
-        return None
-
-    def _selesai_pelanggan(self):
-
-        nama = self.combo_pelanggan.get().strip()
-        berhasil, pesan, id_pelanggan = self.controller.pastikan_pelanggan(
-            nama,
-            self.entry_telp.get().strip(),
-            self.entry_alamat.get().strip(),
-        )
-        return (id_pelanggan if berhasil else None), pesan
+    def _hitung_total(self) -> None:
+        """Menampilkan perkalian berat dengan harga paket contoh."""
+        harga = 0
+        for paket in DATA_PAKET:
+            if paket["nama"] == self.combo_paket.get():
+                harga = paket["harga"]
+                break
+        try:
+            berat = float(self.entry_berat.get().strip() or 0)
+        except ValueError:
+            berat = 0
+        self.label_total.configure(text=f"Total Biaya: {_rp(berat * harga)}")
 
     # ==================================================================
     # DIALOG TAMBAH PAKET
     # ==================================================================
     def _buka_dialog_paket(self) -> None:
+        """Menampilkan jendela kecil berisi isian paket layanan."""
         dialog = ctk.CTkToplevel(self)
         dialog.title("Tambah Paket Layanan")
         dialog.geometry("360x230")
@@ -327,39 +436,25 @@ class LaundryView(ctk.CTkFrame):
             _label(frame, teks, baris, 0, gaya={"anchor": "w"},
                    sticky="w", pady=(0, 2))
 
+        label("Nama Paket", 0)
         entry_nama = _input(frame, ctk.CTkEntry, 1, 0, columnspan=2,
                             gaya={"placeholder_text": "Contoh: Cuci Kilat"},
                             sticky="ew", pady=(0, 10))
 
+        label("Jenis Layanan", 2)
         combo_jenis = _input(frame, ctk.CTkComboBox, 3, 0, columnspan=2,
                              gaya={"state": "normal",
                                    "values": DAFTAR_JENIS},
                              sticky="ew", pady=(0, 10))
         combo_jenis.set(DAFTAR_JENIS[0])
 
-        entry_harga = _input(frame, ctk.CTkEntry, 5, 0, columnspan=2,
-                             gaya={"placeholder_text": "Contoh: 7500"},
-                             sticky="ew", pady=(0, 14))
-
-        label("Nama Paket", 0)
-        label("Jenis Layanan", 2)
         label("Harga per Kg (Rp)", 4)
+        _input(frame, ctk.CTkEntry, 5, 0, columnspan=2,
+               gaya={"placeholder_text": "Contoh: 7500"},
+               sticky="ew", pady=(0, 14))
 
-        def simpan(_event=None):
-            ok, pesan = self.controller.tambah_paket(
-                entry_nama.get().strip(),
-                combo_jenis.get().strip(),
-                entry_harga.get().strip(),
-            )
-            if not ok:
-                messagebox.showerror("Gagal", pesan, parent=dialog)
-                return
-
-            self.muat_data_pendukung()
-            # Pilih paket yang baru saja dibuat.
-            self.combo_paket.set(entry_nama.get().strip())
-            self._hitung_otomatis()
-            messagebox.showinfo("Informasi", pesan, parent=dialog)
+        def tutup(_event=None):
+            messagebox.showinfo("Informasi", PESAN_BELUM, parent=dialog)
             dialog.destroy()
 
         tombol = ctk.CTkFrame(frame, fg_color="transparent")
@@ -369,163 +464,32 @@ class LaundryView(ctk.CTkFrame):
                 gaya={"height": 32, "fg_color": "transparent",
                       "border_width": 1, "text_color": "gray"},
                 sticky="ew", padx=(0, 4))
-        _tombol(tombol, "Simpan Paket", simpan, 0, 1,
+        _tombol(tombol, "Simpan Paket", tutup, 0, 1,
                 gaya={"height": 32}, sticky="ew", padx=(4, 0))
 
         entry_nama.focus_set()
-        bind_event(entry_nama, "<Return>", simpan)
-        bind_event(entry_harga, "<Return>", simpan)
+        bind_event(entry_nama, "<Return>", tutup)
 
     # ==================================================================
-    # AKSI
+    # TOMBOL YANG BELUM TERHUBUNG
     # ==================================================================
-    def _hitung_otomatis(self, _event=None) -> None:
-        total = self.controller.hitung_total(self.entry_berat.get().strip(),
-                                    self._id_paket_terpilih())
-        self.label_total.configure(
-            text=f"Total Biaya: Rp {total:,.0f}".replace(",", "."))
+    def _belum_terhubung(self) -> None:
+        """Menampilkan keterangan bahwa tombol belum berfungsi."""
+        messagebox.showinfo("Informasi", PESAN_BELUM, parent=self)
 
-    def _data_form(self) -> tuple:
-        return (
-            self._id_paket_terpilih(),
-            self.entry_berat.get().strip(),
-            self.entry_terima.get().strip(),
-            self.entry_selesai.get().strip(),
-            self.combo_status.get().strip(),
-        )
 
-    def _aksi_simpan(self, perbarui: bool = False) -> None:
-        if perbarui:
-            if not self.id_terpilih:
-                messagebox.showwarning(
-                    "Peringatan", "Pilih baris pada tabel terlebih dahulu.")
-                return
-        elif self._id_paket_terpilih() is None:
-            messagebox.showwarning(
-                "Peringatan", "Pilih paket layanan terlebih dahulu.")
-            return
+if __name__ == "__main__":
+    # Pengujian antarmuka secara mandiri sesuai langkah pada Modul 5.
+    ctk.set_appearance_mode("light")
+    jendela = ctk.CTk()
+    jendela.title("Halaman Transaksi Laundry")
+    jendela.geometry("1180x760")
+    jendela.grid_rowconfigure(0, weight=1)
+    jendela.grid_columnconfigure(0, weight=1)
 
-        id_pelanggan, pesan = self._selesai_pelanggan()
-        if id_pelanggan is None:
-            messagebox.showerror("Gagal", pesan)
-            return
+    tampilan = LaundryView(jendela)
+    tampilan.grid(row=0, column=0, sticky="nsew")
+    tampilan.grid_rowconfigure(1, weight=1)
+    tampilan.grid_columnconfigure(1, weight=1)
 
-        isi = self._data_form()
-        if perbarui:
-            ok, pesan = self.controller.perbarui(self.id_terpilih, id_pelanggan, *isi)
-        else:
-            ok, pesan = self.controller.simpan(None, id_pelanggan, *isi)
-
-        if not ok:
-            messagebox.showerror("Gagal", pesan)
-            return
-        if "ditambahkan otomatis" in pesan:
-            self.muat_data_pendukung()
-        messagebox.showinfo("Informasi", pesan)
-        self.reset_form()
-        self.muat_daftar()
-
-    def _aksi_perbarui(self) -> None:
-        self._aksi_simpan(perbarui=True)
-
-    def _hapus(self, kunci, pesan_konfirmasi: str, isi_form: bool = False) -> None:
-        if kunci is None:
-            return
-        if not messagebox.askyesno("Konfirmasi", pesan_konfirmasi,
-                                   icon="warning"):
-            return
-
-        ok, pesan = kunci()
-        if ok:
-            self.muat_data_pendukung()
-            self.muat_daftar()
-            if isi_form:
-                self.reset_form()
-        messagebox.showinfo("Informasi", pesan) if ok else \
-            messagebox.showerror("Gagal", pesan)
-
-    def _aksi_hapus(self) -> None:
-        if not self.id_terpilih:
-            messagebox.showwarning(
-                "Peringatan", "Pilih baris pada tabel terlebih dahulu.")
-            return
-        self._hapus(lambda: self.controller.hapus(self.id_terpilih),
-                    "Hapus transaksi ini?", isi_form=True)
-
-    def _aksi_hapus_pelanggan(self) -> None:
-        nama = self.combo_pelanggan.get().strip()
-        id_pelanggan = next((p["id_pelanggan"] for p in self._pelanggan
-                             if p["nama"].lower() == nama.lower()), None)
-        if id_pelanggan is None:
-            messagebox.showwarning(
-                "Peringatan",
-                "Pilih pelanggan yang sudah terdaftar terlebih dahulu.")
-            return
-
-        self._hapus(
-            lambda: self.controller.hapus_pelanggan(id_pelanggan),
-            f"Hapus pelanggan '{nama}'?\n\n"
-            "Semua transaksi milik pelanggan ini juga akan terhapus.")
-
-    def _aksi_hapus_paket(self) -> None:
-        id_paket = self._id_paket_terpilih()
-        if id_paket is None:
-            messagebox.showwarning(
-                "Peringatan", "Pilih paket layanan terlebih dahulu.")
-            return
-
-        nama = self.combo_paket.get().strip()
-        self._hapus(
-            lambda: self.controller.hapus_paket(id_paket),
-            f"Hapus paket '{nama}'?\n\n"
-            "Semua transaksi yang memakai paket ini juga akan terhapus.")
-
-    # ==================================================================
-    # TABEL
-    # ==================================================================
-    def _baris_dipilih(self, _event=None) -> None:
-        pilihan = self.tree.selection()
-        if not pilihan or not self.controller.ambil_transaksi:
-            return
-        self.id_terpilih = self.tree.item(pilihan[0], "values")[0]
-
-        for b in self.controller.ambil_transaksi():
-            if str(b["id_transaksi"]) != str(self.id_terpilih):
-                continue
-            self.combo_pelanggan.set(b["nama_pelanggan"])
-            self._isi_kontak_pelanggan()
-            self.combo_paket.set(b["nama_paket"])
-            _isi(self.entry_berat, f"{float(b['berat_kg']):g}")
-            _isi(self.entry_terima, b["tgl_terima"])
-            _isi(self.entry_selesai, b["tgl_selesai"])
-            self.combo_status.set(b["status_cucian"])
-            self._hitung_otomatis()
-            break
-
-    def muat_daftar(self) -> None:
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-        for baris in self.controller.ambil_transaksi():
-            total = float(baris["total_biaya"] or 0)
-            self.tree.insert("", "end", values=(
-                baris["id_transaksi"],
-                baris["nama_pelanggan"],
-                baris["nama_paket"],
-                f"{float(baris['berat_kg']):g} kg",
-                f"Rp {total:,.0f}".replace(",", "."),
-                baris["status_cucian"],
-            ))
-
-    def reset_form(self) -> None:
-        self.id_terpilih = None
-        for kolom in (self.entry_telp, self.entry_alamat, self.entry_berat,
-                      self.entry_selesai):
-            _isi(kolom, "")
-        _isi(self.entry_terima, "")
-        self._isi_tanggal_default()
-        self.label_total.configure(text="Total Biaya: Rp 0")
-        self.tree.selection_remove(*self.tree.selection())
-        # Kembalikan kolom pelanggan ke pilihan pertama beserta kontaknya.
-        if self._pelanggan:
-            self.combo_pelanggan.set(self._pelanggan[0]["nama"])
-            self._isi_kontak_pelanggan()
+    jendela.mainloop()
