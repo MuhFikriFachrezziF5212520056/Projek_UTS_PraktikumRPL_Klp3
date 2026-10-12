@@ -3,8 +3,9 @@ Antarmuka halaman Login.
 
 Sesuai Modul 5, berkas ini berisi antarmuka statis. Kartu login sudah
 tersusun rapi, tetapi belum dihubungkan ke Controller. Karena itu
-tombol Masuk hanya memeriksa kolom kosong, tanpa memeriksa username
-maupun password.
+username dan password tidak diperiksa terhadap daftar mana pun.
+Tombol Masuk hanya berpindah halaman agar halaman berikutnya dapat
+dilihat.
 
 Jalankan berkas ini secara mandiri dengan:
     python views/login_view.py
@@ -26,7 +27,12 @@ PALET = {
     "salah": "#e11d48",
 }
 
-# Keterangan yang muncul ketika tombol Masuk ditekan.
+# Keterangan yang muncul ketika tombol Masuki ditekan.
+PESAN_LOGIN = ("Username dan password belum diperiksa.\n\n"
+               "Sesuai Modul 5, pemeriksaan kelayakan login merupakan "
+               "tugas Controller yang belum dibuat pada tahap ini.")
+
+# Keterangan yang muncul ketika tombol data ditekan.
 PESAN_BELUM = ("Tombol ini belum berfungsi.\n\n"
                "Sesuai Modul 5, antarmuka pada tahap ini belum "
                "dihubungkan ke Controller.")
@@ -156,7 +162,7 @@ class LoginView(ctk.CTkFrame):
                gaya={"font": ("Segoe UI", 11, "bold"),
                      "text_color": w["teks"], "anchor": "w"},
                sticky="w", padx=(14, 8), pady=12)
-        _label(info, "Tombol belum berfungsi", 0, 1,
+        _label(info, "akun belum diperiksa, isi apa saja", 0, 1,
                gaya={"font": ("Consolas", 11), "text_color": w["teks_lunak"],
                      "anchor": "e"},
                sticky="e", padx=(8, 14), pady=12)
@@ -192,7 +198,13 @@ class LoginView(ctk.CTkFrame):
         )
 
     def _aksi_masuk(self) -> None:
-        """Memeriksa kolom kosong, tombol belum terhubung ke Controller."""
+        """
+        Memeriksa kolom kosong lalu menutup jendela login.
+
+        Username dan password tidak diperiksa terhadap daftar mana pun,
+        karena pemeriksaan itu merupakan pekerjaan Controller yang belum
+        dibuat pada tahap ini. Tombol ini hanya berpindah halaman.
+        """
         # Pesan lama dibersihkan agar tidak menumpuk saat mencoba lagi.
         self.label_salah.configure(text="")
 
@@ -210,12 +222,10 @@ class LoginView(ctk.CTkFrame):
             return
 
         self.pengguna_masuk = self.entry_username.get().strip()
-        self._tampilkan_pesan()
-
-    def _tampilkan_pesan(self) -> None:
-        """Menampilkan keterangan bahwa tombol belum berfungsi."""
-        messagebox.showinfo("Informasi", PESAN_BELUM,
-                           parent=self.winfo_toplevel())
+        messagebox.showinfo("Informasi", PESAN_LOGIN,
+                            parent=self.winfo_toplevel())
+        # Menutup jendela ini supaya jendela utama dapat dibuka.
+        self.winfo_toplevel().destroy()
 
 
 if __name__ == "__main__":
